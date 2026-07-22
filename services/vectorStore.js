@@ -13,8 +13,6 @@ export const embeddings = new GoogleGenerativeAIEmbeddings({
     model: "gemini-embedding-001",
 });
 
-
-
 const COLLECTION_NAME = env.QDRANT_COLLECTION || "langchainjs-testing";
 console.log("QDRANT_URL:", process.env.QDRANT_URL);
 console.log("QDRANT_KEY:", process.env.QDRANT_API_KEY?.slice(0, 20));

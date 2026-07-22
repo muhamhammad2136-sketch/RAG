@@ -305,9 +305,14 @@ router.post(
         }
 
         const { message, sessionId, userId } = parsed.data;
-        const result = await runAgent(message, sessionId, userId);
 
-        return res.json(result);
+        try {
+            const result = await runAgent(message, sessionId, userId);
+            return res.json(result);
+        } catch (error) {
+            console.error(`[agent] sessionId=${sessionId} failed:`, error);
+            return res.status(503).json({ message: "The assistant is not available right now. Please try again later." });
+        }
     })
 );
 

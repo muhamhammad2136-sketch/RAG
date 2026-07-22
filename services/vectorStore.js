@@ -32,7 +32,6 @@ const getStore = () => {
     return globalThis.vectorStore;
 };
 
-// Split raw text into chunks
 const splitText = async (text) => {
     const splitter = new RecursiveCharacterTextSplitter({
         chunkSize: 1000,

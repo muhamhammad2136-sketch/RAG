@@ -169,7 +169,7 @@ class RedisChatMemory {
         const trimmed = messages.slice(-6); 
         const payload = {
             userId: this.userId,
-            messages: messages.map((message) => {
+            messages: trimmed.map((message) => {
                 if (message.constructor?.name === "SystemMessage") {
                     return { type: "system", content: message.content };
                 }
@@ -189,25 +189,18 @@ class RedisChatMemory {
                 return { type: "human", content: message.content };
             }),
         };
-        await redisClient.set(this.key, JSON.stringify(payload));
+        await redisClient.set(this.key, JSON.stringify(payload),{EX: 7200});
     }
 }
 
-const sessionMemories = new Map();
 
-async function getMemory(sessionId, userId) {
-    if (!sessionMemories.has(sessionId)) {
-        sessionMemories.set(sessionId, new RedisChatMemory(sessionId, userId));
-    } else if (userId) {
-        const memory = sessionMemories.get(sessionId);
-        memory.userId = userId;
-    }
-    return sessionMemories.get(sessionId);
+function getMemory(sessionId, userId) {
+    return new RedisChatMemory(sessionId, userId);
 }
 
 
 async function runAgent(userInput, sessionId, userId) {
-    const memory = await getMemory(sessionId, userId);
+    const memory =  getMemory(sessionId, userId);
     const history = await memory.getMessages();
 
 
@@ -315,6 +308,32 @@ router.post(
         const result = await runAgent(message, sessionId, userId);
 
         return res.json(result);
+    })
+);
+
+
+
+router.get(
+    "/history",agentRateLimiter,
+    asyncHandler(async (req, res) => {
+        const sessionId = req.query.sessionId;
+
+        if (!sessionId || typeof sessionId !== "string") {
+            return res.status(400).json({ error: "sessionId query param is required" });
+        }
+
+        const memory = getMemory(sessionId);
+        const rawMessages = await memory.getMessages();
+
+        const messages = rawMessages
+            .filter((m) => m.constructor?.name !== "ToolMessage")
+            .map((m, i) => ({
+                id: `${sessionId}-history-${i}`,
+                sender: m.constructor?.name === "AIMessage" ? "bot" : "user",
+                text: typeof m.content === "string" ? m.content : JSON.stringify(m.content),
+            }));
+
+        return res.json({ messages });
     })
 );
 

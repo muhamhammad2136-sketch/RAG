@@ -1,0 +1,39 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Company {
+  id          String       @id @default(uuid())
+  name        String
+  industry    String
+  location    String
+  website     String?
+  createdAt   DateTime     @default(now())
+  departments Department[]
+}
+
+model Department {
+  id        String    @id @default(uuid())
+  name      String
+  companyId String
+  company   Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employees Employee[]
+  createdAt DateTime  @default(now())
+}
+
+model Employee {
+  id           String     @id @default(uuid())
+  name         String
+  email        String     @unique
+  role         String
+  salary       Float
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime   @default(now())
+}

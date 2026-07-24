@@ -12,7 +12,6 @@ export async function searchKnowledgeBase(vectorStore, query) {
     docsWithScores.forEach(([doc, score], index) => {
         console.log(`📄 RESULT ${index + 1}`);
         console.log(`⭐ Score      : ${score}`);
-        console.log(`📁 Metadata   :`, doc.metadata);
         console.log("📝 Chunk:");
         console.log(doc.pageContent);
         console.log("\n----------------------------------------\n");

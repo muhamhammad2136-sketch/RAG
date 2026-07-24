@@ -295,7 +295,7 @@ async function runAgent(userInput, sessionId, userId) {
         `⚠️ sessionId=${sessionId} total tokens (hit MAX_AGENT_STEPS) -> input: ${totalInputTokens}, output: ${totalOutputTokens}, total: ${totalInputTokens + totalOutputTokens}`
     );
 
-    return { answer: "Unable to solve request right now unfortunately.", usedTools };
+    return { answer: "Pleae ellaborate your prompt.I can't get it", usedTools };
 }
 
 

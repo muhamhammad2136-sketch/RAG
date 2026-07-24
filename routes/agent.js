@@ -324,6 +324,7 @@ router.post(
 
         try {
             const result = await runAgent(message, sessionId, userId);
+            console.log(result)
             return res.json(result);
         } catch (error) {
             console.error(`[agent] sessionId=${sessionId} failed:`, error);

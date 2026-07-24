@@ -26,5 +26,6 @@ export const llm = new ChatGoogleGenerativeAI({
   model: "gemini-2.5-flash",
   maxRetries: 2,       
   maxOutputTokens: 2048
+  temperature:0.1
 });
 

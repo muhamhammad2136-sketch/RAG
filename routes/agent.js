@@ -48,14 +48,15 @@ const storage = multer.diskStorage({
         cb(null, `${uniqueSuffix}-${safeName}`);
     },
 });
+
 const upload = multer({
     storage,
     limits: { fileSize: 10 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         const isPdf =
-        file.mimetype === "application/pdf" ||
-        file.originalname?.toLowerCase().endsWith(".pdf");
-        
+            file.mimetype === "application/pdf" ||
+            file.originalname?.toLowerCase().endsWith(".pdf");
+
         if (!isPdf) {
             cb(new Error("Only PDF files are allowed."));
             return;
@@ -109,10 +110,6 @@ Never write XML, JSON, or <function> tags manually.
 Never include tool calls inside your text response.
 `;
 
-const cachedContent = await llm.createCache({
-  contents: [{ role: "system", parts: [{ text: SYSTEM_PROMPT }] }],
-  ttl: "3600s", // 1 hour expiry
-});
 
 async function ensureRedisConnection() {
     if (!redisClient.isOpen) {
@@ -231,7 +228,7 @@ async function runAgent(userInput, sessionId, userId) {
     let totalOutputTokens = 0;
 
     for (let step = 0; step < MAX_AGENT_STEPS; step++) {
-        const aiMsg = await llmWithTools.invoke(messages,{cachedContent:cachedContent.name});
+        const aiMsg = await llmWithTools.invoke(messages);
         messages.push(aiMsg);
 
         // token usage for this step

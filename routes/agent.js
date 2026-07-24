@@ -103,11 +103,6 @@ RESPONSE STYLE
 - Use numbered lists only when appropriate.
 - Keep paragraphs short and easy to read.
 
-TOOL USAGE RULES
-
-When using tools, use the provided tool calling interface only.
-Never write XML, JSON, or <function> tags manually.
-Never include tool calls inside your text response.
 `;
 
 
@@ -213,9 +208,8 @@ async function runAgent(userInput, sessionId, userId) {
     const history = await memory.getMessages();
 
     const tools = createTools(global.vectorStore);
-    const llmWithTools = llm.bindTools(tools,{
-         tool_choice: "auto",
-    });
+    const llmWithTools = llm.bindTools(tools
+    );
 
     const messages = [
         new SystemMessage(SYSTEM_PROMPT),

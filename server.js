@@ -13,7 +13,6 @@ import { notFoundHandler, errorHandler } from "./middleware/errorhandler.js";
 import knowledgeRoutes from "./routes/knowledgeRoutes.js";
 import agentRoutes from "./routes/agent.js";
 
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { Document } from "@langchain/core/documents";
 import { redisClient, connectRedis } from "./config/redis.js";
 

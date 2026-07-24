@@ -34,8 +34,25 @@ const getStore = () => {
 
 const splitText = async (text) => {
     const splitter = new RecursiveCharacterTextSplitter({
-        chunkSize: 1000,
-        chunkOverlap: 150,
+        chunkSize: 900,
+        chunkOverlap: 180,
+        separators: [
+        "\n# ",
+        "\n## ",
+        "\n### ",
+        "\n#### ",
+        "\n\n",
+        "\n",
+        ". ",
+        "? ",
+        "! ",
+        "; ",
+        ": ",
+        ", ",
+        " ",
+        ""
+    ],
+    keepSeparator: true,
     });
     return await splitter.splitText(text);
 };

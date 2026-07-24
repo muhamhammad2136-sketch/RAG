@@ -1,15 +1,24 @@
 export async function searchKnowledgeBase(vectorStore, query) {
-  if (!vectorStore) {
-    throw new Error("Vector store not initialized.");
-  }
+    if (!vectorStore) {
+        throw new Error("Vector store not initialized.");
+    }
 
-  const docsWithScores = await vectorStore.similaritySearchWithScore(query, 5);
+    const docsWithScores = await vectorStore.similaritySearchWithScore(query, 5);
 
-  docsWithScores.forEach(([doc, score], index) => {
-    console.log(`========== Chunk ${index + 1} (score: ${score.toFixed(4)}) ==========`);
-    console.log(doc.pageContent.slice(0, 150));
-    console.log("----------------------------------------");
-  });
+    console.log("\n========================================");
+    console.log("🔍 User Query:", query);
+    console.log("========================================\n");
 
-  return docsWithScores.map(([doc]) => doc.pageContent).join("\n\n");
+    docsWithScores.forEach(([doc, score], index) => {
+        console.log(`📄 RESULT ${index + 1}`);
+        console.log(`⭐ Score      : ${score}`);
+        console.log(`📁 Metadata   :`, doc.metadata);
+        console.log("📝 Chunk:");
+        console.log(doc.pageContent);
+        console.log("\n----------------------------------------\n");
+    });
+
+    return docsWithScores
+        .map(([doc]) => doc.pageContent)
+        .join("\n\n");
 }

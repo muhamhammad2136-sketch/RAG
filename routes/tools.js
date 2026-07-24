@@ -19,7 +19,7 @@ export function createTools(vectorStore) {
     {
       name: "search_knowledge_base",
       description:
-"Search Telecard's complete knowledge base, including uploaded PDFs and manually added text. Always use this tool to answer any question about Telecard, its employees, policies, products, contact information, phone numbers, departments, CEO, HR, or company procedures.",
+"Search Telecard's complete knowledge base, including uploaded PDFs and manually added text. Always use this tool to answer any question about Telecard, its employees, policies, products, contact information, phone numbers, departments, CEO, HR, or company procedures anything which you think it can be retrieved from here",
       schema: z.object({
         query: z.string().min(1).max(500),
       }),

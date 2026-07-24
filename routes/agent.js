@@ -48,7 +48,10 @@ const storage = multer.diskStorage({
         cb(null, `${uniqueSuffix}-${safeName}`);
     },
 });
-
+const cachedContent = await llm.createCache({
+  contents: [{ role: "system", parts: [{ text: SYSTEM_PROMPT }] }],
+  ttl: "3600s", // 1 hour expiry
+});
 const upload = multer({
     storage,
     limits: { fileSize: 10 * 1024 * 1024 },
@@ -102,6 +105,12 @@ RESPONSE STYLE
 - Do not use markdown symbols such as ** or #.
 - Use numbered lists only when appropriate.
 - Keep paragraphs short and easy to read.
+
+TOOL USAGE RULES
+
+When using tools, use the provided tool calling interface only.
+Never write XML, JSON, or <function> tags manually.
+Never include tool calls inside your text response.
 `;
 
 
@@ -207,7 +216,9 @@ async function runAgent(userInput, sessionId, userId) {
     const history = await memory.getMessages();
 
     const tools = createTools(global.vectorStore);
-    const llmWithTools = llm.bindTools(tools);
+    const llmWithTools = llm.bindTools(tools,{
+         tool_choice: "auto",
+    });
 
     const messages = [
         new SystemMessage(SYSTEM_PROMPT),
@@ -220,7 +231,7 @@ async function runAgent(userInput, sessionId, userId) {
     let totalOutputTokens = 0;
 
     for (let step = 0; step < MAX_AGENT_STEPS; step++) {
-        const aiMsg = await llmWithTools.invoke(messages);
+        const aiMsg = await llmWithTools.invoke(messages,{cachedContent:cachedContent.name});
         messages.push(aiMsg);
 
         // token usage for this step

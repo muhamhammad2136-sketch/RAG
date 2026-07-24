@@ -22,8 +22,7 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 export const llm = new ChatGoogleGenerativeAI({
   apiKey: env.GOOGLE_API_KEY,
   model: "gemini-2.5-flash",
-  maxRetries: 2,       
-  maxOutputTokens: 2048,
-  temperature:0.2
+  temperature: 0.1,
+  maxOutputTokens: 150, // ya 100
+  maxRetries: 2,
 });
-

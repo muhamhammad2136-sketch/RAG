@@ -5,7 +5,7 @@ dotenv.config();
 
 const envSchema = z.object({
   PORT: z.coerce.number().default(5000),
-  XAI_API_KEY: z.string().min(1, "XAI_API_KEY is required"),
+  GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required"),
   GOOGLE_API_KEY: z.string().min(1, "GOOGLE_API_KEY is required"),
   QDRANT_URL: z.string().url("QDRANT_URL must be a valid URL"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),

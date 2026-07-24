@@ -200,25 +200,22 @@ function getMemory(sessionId, userId) {
 
 
 async function runAgent(userInput, sessionId, userId) {
-    const memory =  getMemory(sessionId, userId);
+    const memory = getMemory(sessionId, userId);
     const history = await memory.getMessages();
 
-
     console.log("===== CHAT HISTORY =====");
-
-history.forEach((m, i) => {
-    console.log(i, m.constructor.name, m.content);
-});
-
-console.log("========================");
+    history.forEach((m, i) => {
+        console.log(i, m.constructor.name, m.content);
+    });
+    console.log("========================");
 
     const tools = createTools(global.vectorStore);
     console.log(
-   tools.map((t) => ({
-    name: t.name,
-    description: t.description,
-  }))
-  );
+        tools.map((t) => ({
+            name: t.name,
+            description: t.description,
+        }))
+    );
 
     const llmWithTools = llm.bindTools(tools);
 
@@ -230,25 +227,40 @@ console.log("========================");
 
     const usedTools = [];
 
-    for (let step = 0; step < MAX_AGENT_STEPS; step++) {
-         console.log(`🔵 Gemini API call #${step + 1} for this question`);
+    // token accumulators for the whole request
+    let totalInputTokens = 0;
+    let totalOutputTokens = 0;
 
-    messages.map(m => ({
-        role: m.constructor.name,
-        content: m.content
-    }))
+    for (let step = 0; step < MAX_AGENT_STEPS; step++) {
+        console.log(`🔵 Groq API call #${step + 1} for this question`);
 
         const aiMsg = await llmWithTools.invoke(messages);
         console.log("AI RESPONSE:");
         console.dir(aiMsg, { depth: null });
         messages.push(aiMsg);
 
-      
+        // token usage for this step
+        const usage = aiMsg.usage_metadata; // { input_tokens, output_tokens, total_tokens }
+        if (usage) {
+            totalInputTokens += usage.input_tokens ?? 0;
+            totalOutputTokens += usage.output_tokens ?? 0;
+            console.log(
+                `📊 step ${step + 1} tokens -> input: ${usage.input_tokens}, output: ${usage.output_tokens}, total: ${usage.total_tokens}`
+            );
+        } else {
+            console.log(`📊 step ${step + 1} tokens -> no usage_metadata on aiMsg`);
+        }
+
         if (!aiMsg.tool_calls || aiMsg.tool_calls.length === 0) {
             history.push(new HumanMessage(userInput));
             history.push(new AIMessage(aiMsg.content));
 
-await memory.saveMessages(history);
+            await memory.saveMessages(history);
+
+            console.log(
+                `✅ sessionId=${sessionId} total tokens -> input: ${totalInputTokens}, output: ${totalOutputTokens}, total: ${totalInputTokens + totalOutputTokens}`
+            );
+
             return { answer: aiMsg.content, usedTools };
         }
 
@@ -275,14 +287,18 @@ await memory.saveMessages(history);
             );
         }
     }
-    history.push(new HumanMessage(userInput));
-history.push(new AIMessage("Unable to solve request."));
 
-await memory.saveMessages(history);
+    history.push(new HumanMessage(userInput));
+    history.push(new AIMessage("Unable to solve request."));
+
+    await memory.saveMessages(history);
+
+    console.log(
+        `⚠️ sessionId=${sessionId} total tokens (hit MAX_AGENT_STEPS) -> input: ${totalInputTokens}, output: ${totalOutputTokens}, total: ${totalInputTokens + totalOutputTokens}`
+    );
 
     return { answer: "Unable to solve request right now unfortunately.", usedTools };
 }
-
 
 
 const agentRequestSchema = z.object({

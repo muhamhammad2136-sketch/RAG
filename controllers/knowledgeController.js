@@ -25,9 +25,7 @@ const extractPdfText = async (filePath) => {
     }
 };
 
-// ---------------------------------------------------------
-// POST /api/knowledge/pdf
-// ---------------------------------------------------------
+
 export const uploadPdf = async (req, res) => {
     let knowledge;
     try {

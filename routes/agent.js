@@ -201,25 +201,12 @@ function getMemory(sessionId, userId) {
     return new RedisChatMemory(sessionId, userId);
 }
 
-
 async function runAgent(userInput, sessionId, userId) {
+    const startTime = Date.now();
     const memory = getMemory(sessionId, userId);
     const history = await memory.getMessages();
 
-    console.log("===== CHAT HISTORY =====");
-    history.forEach((m, i) => {
-        console.log(i, m.constructor.name, m.content);
-    });
-    console.log("========================");
-
     const tools = createTools(global.vectorStore);
-    console.log(
-        tools.map((t) => ({
-            name: t.name,
-            description: t.description,
-        }))
-    );
-
     const llmWithTools = llm.bindTools(tools);
 
     const messages = [
@@ -229,48 +216,41 @@ async function runAgent(userInput, sessionId, userId) {
     ];
 
     const usedTools = [];
-
-    // token accumulators for the whole request
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
 
     for (let step = 0; step < MAX_AGENT_STEPS; step++) {
-        console.log(`🔵 Groq API call #${step + 1} for this question`);
-
         const aiMsg = await llmWithTools.invoke(messages);
-        console.log("AI RESPONSE:");
-        console.dir(aiMsg, { depth: null });
         messages.push(aiMsg);
 
         // token usage for this step
-        const usage = aiMsg.usage_metadata; // { input_tokens, output_tokens, total_tokens }
+        const usage = aiMsg.usage_metadata;
         if (usage) {
             totalInputTokens += usage.input_tokens ?? 0;
             totalOutputTokens += usage.output_tokens ?? 0;
-            console.log(
-                `📊 step ${step + 1} tokens -> input: ${usage.input_tokens}, output: ${usage.output_tokens}, total: ${usage.total_tokens}`
-            );
-        } else {
-            console.log(`📊 step ${step + 1} tokens -> no usage_metadata on aiMsg`);
         }
+        console.log(
+            `📊 sessionId=${sessionId} step=${step + 1} tokens -> in: ${usage?.input_tokens ?? "?"}, out: ${usage?.output_tokens ?? "?"}`
+        );
 
         if (!aiMsg.tool_calls || aiMsg.tool_calls.length === 0) {
             history.push(new HumanMessage(userInput));
             history.push(new AIMessage(aiMsg.content));
-
             await memory.saveMessages(history);
 
+            const elapsedMs = Date.now() - startTime;
             console.log(
-                `✅ sessionId=${sessionId} total tokens -> input: ${totalInputTokens}, output: ${totalOutputTokens}, total: ${totalInputTokens + totalOutputTokens}`
+                `✅ sessionId=${sessionId} | steps=${step + 1} | tools=[${usedTools.join(", ") || "none"}] | tokens(in/out/total)=${totalInputTokens}/${totalOutputTokens}/${totalInputTokens + totalOutputTokens} | time=${elapsedMs}ms`
             );
 
             return { answer: aiMsg.content, usedTools };
         }
 
         for (const toolCall of aiMsg.tool_calls) {
-            const selectedTool = tools.find((t) => t.name === toolCall.name);
             usedTools.push(toolCall.name);
+            console.log(`🔧 sessionId=${sessionId} step=${step + 1} tool=${toolCall.name} args=${JSON.stringify(toolCall.args)}`);
 
+            const selectedTool = tools.find((t) => t.name === toolCall.name);
             let result;
             try {
                 if (!selectedTool) {
@@ -293,14 +273,14 @@ async function runAgent(userInput, sessionId, userId) {
 
     history.push(new HumanMessage(userInput));
     history.push(new AIMessage("Unable to solve request."));
-
     await memory.saveMessages(history);
 
+    const elapsedMs = Date.now() - startTime;
     console.log(
-        `⚠️ sessionId=${sessionId} total tokens (hit MAX_AGENT_STEPS) -> input: ${totalInputTokens}, output: ${totalOutputTokens}, total: ${totalInputTokens + totalOutputTokens}`
+        `⚠️ sessionId=${sessionId} MAX_AGENT_STEPS hit | tools=[${usedTools.join(", ") || "none"}] | tokens(in/out/total)=${totalInputTokens}/${totalOutputTokens}/${totalInputTokens + totalOutputTokens} | time=${elapsedMs}ms`
     );
 
-    return { answer: "Pleae ellaborate your prompt.I can't get it", usedTools };
+    return { answer: "Please elaborate your prompt. I can't get it", usedTools };
 }
 
 

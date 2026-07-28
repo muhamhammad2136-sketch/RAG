@@ -5,7 +5,7 @@ import { createClient } from "redis";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { TaskType } from "@google/generative-ai";
-import connectDB ,{disconnectDB }from "./config/db.js";
+import connectMongoDB,{disconnectMongoDB} from "./config/mongoDb.js";
 import {qdrantClient} from "./config/qdrant.js";
 import { env } from "./config/env.js";
 import { apiRateLimiter,agentRateLimiter } from "./middleware/ratelimiter.js";
@@ -18,8 +18,8 @@ import { redisClient, connectRedis } from "./config/redis.js";
 
 import { QdrantClient } from "@qdrant/js-client-rest";
 import multer from "multer";
-import dotenv from "dotenv"
-dotenv.config()
+import dotenv from "dotenv";
+dotenv.config();
 const app = express();
 
 app.use(helmet());
@@ -36,7 +36,7 @@ app.use((err, req, res, next) => {
 });
 
 
-connectDB();
+
 
 
 const allowedOrigins =
@@ -128,7 +128,7 @@ let server;
 const startServer = async () => {
     await connectRedis();
     await initVectorStore();
-
+    await connectMongoDB();
     server = app.listen(env.PORT, () => {
         console.log(
             `🚀 Server running on port ${env.PORT} [${env.NODE_ENV}]`
@@ -145,7 +145,7 @@ async function shutdown(signal) {
             console.log("✅ Redis Disconnected");
         }
 
-        await disconnectDB();
+        await disconnectMongoDB();
 
         server?.close(() => {
             console.log("✅ Server Closed");

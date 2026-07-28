@@ -8,9 +8,12 @@ const envSchema = z.object({
   GROQ_API_KEY: z.string().min(1, "GROQ_API_KEY is required"),
   GOOGLE_API_KEY: z.string().min(1, "GOOGLE_API_KEY is required"),
   QDRANT_URL: z.string().url("QDRANT_URL must be a valid URL"),
-  DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
+  // DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   QDRANT_API_KEY: z.string().min(1, "QDRANT_API_KEY is required"),
   MONGO_URI: z.string().min(1, "MONGO_URI is required"),
+  DATABASE_URL: z.string().min(1, "DATABASE_URL is required").optional(),
+  DIRECT_URL: z.string().min(1, "DIRECT_URL is required").optional(),
+
 
   // Auth is disabled for now (see server.js). Set this and re-enable
   // apiKeyAuth in server.js before deploying publicly.

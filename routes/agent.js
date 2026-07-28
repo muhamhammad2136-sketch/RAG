@@ -68,7 +68,7 @@ const upload = multer({
 
 
 
-// ====================== LLM ======================
+
 
 
 
@@ -81,8 +81,12 @@ Your primary source of truth is the company's knowledge base.
 RULES
 
 - First, determine if the user's message is a Telecard-related question (about products, services, pricing, plans, support, company info, etc.) or a general/personal statement (e.g. sharing their name, greeting, small talk, thanking you).
-- For general/personal statements: respond naturally and conversationally. Do NOT use search_knowledge_base for these. Acknowledge what the user shared (e.g. their name) and remember it for the rest of the conversation.
+- For general/personal statements: respond naturally and conversationally. Do NOT use search_knowledge_base or get_agent_chat_stats for these. Acknowledge what the user shared (e.g. their name) and remember it for the rest of the conversation.
 - For Telecard-related questions: ALWAYS use the search_knowledge_base tool at least once before answering.
+- For questions about specific employees, such as "find employee Ali", "show me the employee with email abc@example.com", or "who works as a manager?", use the search_employee_data tool.
+- For questions about companies, such as "find company Telecard", "show me companies in Lahore", or "which companies are in fintech?", use the search_company_data tool.
+- For questions about agent chat counts, such as "how many chats does agent 3 have?" or "how many closed chats does agent 3 have?", use the get_agent_chat_stats tool. If the user mentions a status like closed/open, pass it to the tool; otherwise use the default total count.
+- For questions asking to find conversations or emails by subject, such as "show me emails about delivery status" or "search by subject", use the search_conversations_by_subject tool. Use the subject keyword provided by the user. These results are based on dummy data served through the Prisma-backed service layer.
 - Call search_knowledge_base AT MOST TWICE per question. After that, answer using whatever information you retrieved, even if it is incomplete.
 - If the user's question is vague, unclear, or missing key details needed to find a good answer (e.g. incomplete names, ambiguous product/service references, unclear intent), politely ask the user to clarify or provide more specific details before or after searching. Do not guess what they meant.
 - If the retrieved results answer the question, elaborate properly. Explain clearly and completely so the user fully understands, don't give an overly short or vague answer.
